@@ -1,0 +1,14 @@
+
+# Gopkg.toml
+#
+# Refer to https://github.com/golang/dep/blob/master/docs/Gopkg.toml.md
+# for detailed Gopkg.toml documentation.
+
+
+[[constraint]]
+  name = "github.com/sirupsen/logrus"
+  version = "1.0.4"
+
+[[constraint]]
+  name = "github.com/gambol99/go-marathon"
+  version = "0.7.1"
