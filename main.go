@@ -64,7 +64,7 @@ func main() {
 	}
 
 	log.Printf("Found %d applications running", len(applications.Apps))
-	if confirm("Do you wish to continue? [Y/n]", "y") {
+	if len(applications.Apps) > 0 && confirm("Do you wish to continue? [Y/n]", "y") {
 		apps := applications.Apps
 		for len(apps) > 0 {
 			apps = restartApps(apps, client)
