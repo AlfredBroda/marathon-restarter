@@ -1,0 +1,13 @@
+language: go
+go:
+- 1.9.x
+script: make travis-ci
+deploy:
+  provider: releases
+  api_key:
+    secure: Rh1rwImw5WuSxununwaQ4GNv7JGRyTVAW5ENYNBuRfxcwgfHbzvulgyikkusHP+DWxYbz52a4vEtBV9Tnsitj6i0unAvU5AUuxaeHORX8Zc/Q/Y2JiXkpDlsEihCaxOM6F52cdeDDo552S9RApQFmLNfFEFvcbezjvarJX+TUCJ21MbmRaypHSvzkC+CBl2Ossmq+xsKKc+7MFPZj17pO3zNwnhOgwn0OzjUPUcma6kLFwyxP0Lwz9ovXm33F3zBqTL6C43q3gLn0BCFPrpIOmHVQQrz7i7bQ4r3TgXhdCyQ+Ltx4SILpT/FexvMgd6Gea+Qr4z3iHjhCC98Vc7mnDDL3TuYRTIGGkwznHKfcGb1fRynYcTGncGXlatuNSDT8Qn3QKlXqI96u0yEC8onzngcaHcHQhqnfiN8XtPc7FziYld/gf8aHsFLkjgvR/CDJhqxhvDrC9CLN7O6mcjY0wHdYZeadXoipjsxTDAjmNerGyNQZ9j/Vg15BaAObPdTeYbBLo3aZpk/xVIEMj0+sb8w9g52n6kojXvDXKf06CI7uwq6X252ZXC8I1uleeQfKuW9Hik+Ywxtd+HNJANxovQC/1PlF9yvKdkJySCl6OSJx46cwXXZ0Bh5kTtXYVw95Vw0V+t3MTdjPtH3G8mLkgS4I+UcJZuzTIIG361gO3c=
+  file: target/marathon-restarter-linux-amd64.zip
+  skip_cleanup: true
+  on:
+    repo: AlfredBroda/marathon-restarter
+    tags: true
