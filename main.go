@@ -14,6 +14,8 @@ import (
 )
 
 var (
+	// Version holds the version of this software
+	Version     string
 	marathonURL string
 	timeout     time.Duration
 	query       url.Values
@@ -26,6 +28,7 @@ func init() {
 		DisableColors: true,
 	}
 	log.SetFormatter(formatter)
+	log.Printf("Initializing marathon-restarter %s", Version)
 
 	var (
 		wait       int
@@ -57,6 +60,7 @@ func init() {
 	if user != "" && password != "" {
 		config.HTTPBasicAuthUser = user
 		config.HTTPBasicPassword = password
+		log.Printf("Using BasicAuth with user %s to authenticate.", user)
 	}
 }
 
@@ -74,12 +78,12 @@ func main() {
 		log.Panicf("Unable to retrieve application list from Marathon at %s", marathonURL)
 	}
 
-	log.Printf("Found %d applications running", len(applications.Apps))
+	log.Printf("Found %d application(s) running", len(applications.Apps))
 	if len(applications.Apps) > 0 && confirm("Do you wish to continue? [Y/n]", "y") {
 		apps := applications.Apps
 		for len(apps) > 0 {
 			apps = restartApps(apps, client)
-			if len(apps) > 0 && confirm(fmt.Sprintf("Attention! %d applications failed to restart, retry? [y/N]", len(apps)), "n") {
+			if len(apps) > 0 && confirm(fmt.Sprintf("Attention! %d application(s) failed to restart, retry? [y/N]", len(apps)), "n") {
 				apps = []marathon.Application{}
 			}
 		}
