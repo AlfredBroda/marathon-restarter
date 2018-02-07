@@ -72,3 +72,21 @@ func TestIfRestartErrorsAreRetryable(t *testing.T) {
 	require.Contains(t, remaining, testApps[0])
 	mockClient.AssertExpectations(t)
 }
+
+func TestIfDeploymentErrorsAreRetryable(t *testing.T) {
+	mockClient := new(MockClient)
+
+	mockClient.On("RestartApplication", firstAppID, false).Return(deployOne, nil).Once()
+	mockClient.On("RestartApplication", secondAppID, false).Return(deployTwo, nil).Once()
+
+	mockClient.On("WaitOnDeployment", firstAppID, timeout).Return(nil).Once()
+	mockClient.On("WaitOnDeployment", secondAppID, timeout).Return(fmt.Errorf("test error")).Once()
+
+	// when
+	remaining := restartApps(testApps, mockClient)
+
+	// then
+	require.NotEmpty(t, remaining)
+	require.Contains(t, remaining, testApps[1])
+	mockClient.AssertExpectations(t)
+}
