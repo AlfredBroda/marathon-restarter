@@ -12,3 +12,7 @@
 [[constraint]]
   name = "github.com/gambol99/go-marathon"
   version = "0.7.1"
+
+[[constraint]]
+  name = "github.com/stretchr/testify"
+  revision = "f6abca593680b2315d2075e0f5e2a9751e3f431a"
