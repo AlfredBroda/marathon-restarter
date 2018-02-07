@@ -15,20 +15,32 @@ import (
 
 var (
 	marathonURL string
-	limit       int
 	timeout     time.Duration
 	query       url.Values
+	config      marathon.Config
 )
 
 func init() {
-	var wait int
-	var appIDQuery string
-	var labelQuery string
+	// ensure we will always have logs in logfmt format
+	formatter := &log.TextFormatter{
+		DisableColors: true,
+	}
+	log.SetFormatter(formatter)
+
+	var (
+		wait       int
+		appIDQuery string
+		labelQuery string
+		user       string
+		password   string
+	)
+
 	flag.StringVar(&marathonURL, "marathon", "http://example.com", "address of the Marathon host to query")
-	flag.IntVar(&limit, "limit", 1, "maximum number of apps restarted at once")
 	flag.IntVar(&wait, "wait", 120, "timeout for a single deployment, in seconds")
 	flag.StringVar(&appIDQuery, "app", "", "only restart apps that contain the given string")
 	flag.StringVar(&labelQuery, "label", "", "only restart apps that have the given label")
+	flag.StringVar(&user, "user", "", "user for BasicAuth")
+	flag.StringVar(&password, "password", "", "password for BasicAuth")
 	flag.Parse()
 
 	timeout = time.Duration(wait) * time.Second
@@ -40,17 +52,16 @@ func init() {
 		query.Add("label", labelQuery)
 	}
 
-	// ensure we will always have logs in logfmt format
-	formatter := &log.TextFormatter{
-		DisableColors: true,
+	config = marathon.NewDefaultConfig()
+	config.URL = marathonURL
+	if user != "" && password != "" {
+		config.HTTPBasicAuthUser = user
+		config.HTTPBasicPassword = password
 	}
-	log.SetFormatter(formatter)
 }
 
 func main() {
 	log.Println("Querying Marathon for apps...")
-	config := marathon.NewDefaultConfig()
-	config.URL = marathonURL
 	client, err := marathon.NewClient(config)
 	if err != nil {
 		log.Error(err)
@@ -83,7 +94,12 @@ func confirm(question string, check string) bool {
 	return strings.Trim(text, "\n") == check || text == "\n"
 }
 
-func restartApps(applications []marathon.Application, client marathon.Marathon) (failedRestarts []marathon.Application) {
+type marathonClient interface {
+	RestartApplication(appID string, force bool) (deploymentID *marathon.DeploymentID, err error)
+	WaitOnDeployment(deployID string, timeout time.Duration) (err error)
+}
+
+func restartApps(applications []marathon.Application, client marathonClient) (failedRestarts []marathon.Application) {
 	for _, application := range applications {
 		log.Printf("Restarting application: %v", application.ID)
 		deployment, err := client.RestartApplication(application.ID, false)
