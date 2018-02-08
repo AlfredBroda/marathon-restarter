@@ -21,6 +21,7 @@ var (
 	delay       time.Duration
 	query       url.Values
 	config      marathon.Config
+	answerYes   bool
 )
 
 func init() {
@@ -47,6 +48,7 @@ func init() {
 	flag.StringVar(&labelQuery, "label", "", "only restart apps that have the given label")
 	flag.StringVar(&user, "user", "", "user for BasicAuth")
 	flag.StringVar(&password, "password", "", "password for BasicAuth")
+	flag.BoolVar(&answerYes, "yes", false, "assume Yes on all questions (useful for scripting)")
 	flag.Parse()
 
 	timeout = time.Duration(waitSeconds) * time.Second
@@ -73,13 +75,15 @@ func main() {
 	client, err := marathon.NewClient(config)
 	if err != nil {
 		log.Error(err)
-		log.Panic("Unable to create a Marathon client!")
+		log.Error("Unable to create a Marathon client!")
+		os.Exit(1)
 	}
 
 	applications, err := client.Applications(query)
 	if err != nil {
 		log.Error(err)
-		log.Panicf("Unable to retrieve application list from Marathon at %s", marathonURL)
+		log.Errorf("Unable to retrieve application list from Marathon at %s", marathonURL)
+		os.Exit(1)
 	}
 
 	log.Printf("Found %d application(s) running", len(applications.Apps))
@@ -95,6 +99,9 @@ func main() {
 }
 
 func confirm(question string, check string) bool {
+	if answerYes {
+		return check == "y"
+	}
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print(question)
 	text, _ := reader.ReadString('\n')
