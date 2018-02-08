@@ -18,6 +18,7 @@ var (
 	Version     string
 	marathonURL string
 	timeout     time.Duration
+	delay       time.Duration
 	query       url.Values
 	config      marathon.Config
 )
@@ -31,22 +32,25 @@ func init() {
 	log.Printf("Initializing marathon-restarter %s", Version)
 
 	var (
-		wait       int
-		appIDQuery string
-		labelQuery string
-		user       string
-		password   string
+		waitSeconds  int
+		delaySeconds int
+		appIDQuery   string
+		labelQuery   string
+		user         string
+		password     string
 	)
 
 	flag.StringVar(&marathonURL, "marathon", "http://example.com", "address of the Marathon host to query")
-	flag.IntVar(&wait, "wait", 120, "timeout for a single deployment, in seconds")
+	flag.IntVar(&waitSeconds, "wait", 120, "timeout for a single deployment, in seconds (0 means don't wait)")
+	flag.IntVar(&delaySeconds, "delay", 0, "time to sleep between restarts (0 means don't sleep)")
 	flag.StringVar(&appIDQuery, "app", "", "only restart apps that contain the given string")
 	flag.StringVar(&labelQuery, "label", "", "only restart apps that have the given label")
 	flag.StringVar(&user, "user", "", "user for BasicAuth")
 	flag.StringVar(&password, "password", "", "password for BasicAuth")
 	flag.Parse()
 
-	timeout = time.Duration(wait) * time.Second
+	timeout = time.Duration(waitSeconds) * time.Second
+	delay = time.Duration(delaySeconds) * time.Second
 	query = url.Values{}
 	if appIDQuery != "" {
 		query.Add("id", appIDQuery)
@@ -110,12 +114,15 @@ func restartApps(applications []marathon.Application, client marathonClient) (fa
 		if err != nil {
 			log.Error(err)
 			failedRestarts = append(failedRestarts, application)
-		} else {
+		} else if timeout > 0 {
 			err = client.WaitOnDeployment(deployment.DeploymentID, timeout)
 			if err != nil {
 				log.Error(err)
 				failedRestarts = append(failedRestarts, application)
 			}
+		}
+		if delay > 0 {
+			time.Sleep(delay)
 		}
 		log.Print("Done.")
 	}

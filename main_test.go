@@ -90,3 +90,18 @@ func TestIfDeploymentErrorsAreRetryable(t *testing.T) {
 	require.Contains(t, remaining, testApps[1])
 	mockClient.AssertExpectations(t)
 }
+
+func TestIfNoTimeoutSkipsWait(t *testing.T) {
+	mockClient := new(MockClient)
+
+	timeout = 0
+	mockClient.On("RestartApplication", firstAppID, false).Return(deployOne, nil).Once()
+	mockClient.On("RestartApplication", secondAppID, false).Return(deployTwo, nil).Once()
+
+	// when
+	remaining := restartApps(testApps, mockClient)
+
+	// then
+	require.Empty(t, remaining)
+	mockClient.AssertExpectations(t)
+}
